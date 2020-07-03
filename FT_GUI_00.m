@@ -22,7 +22,7 @@ function varargout = FT_GUI_00(varargin)
 
 % Edit the above text to modify the response to help FT_GUI_00
 
-% Last Modified by GUIDE v2.5 02-Jul-2020 22:26:35
+% Last Modified by GUIDE v2.5 03-Jul-2020 01:41:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -168,9 +168,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in pb_draw.
-function pb_draw_Callback(hObject, eventdata, handles)
-% hObject    handle to pb_draw (see GCBO)
+% --- Executes on button press in pb_draw1.
+function pb_draw1_Callback(hObject, eventdata, handles)
+% hObject    handle to pb_draw1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global gstop
@@ -188,11 +188,15 @@ nft = str2double(get(handles.edit_nft,'string'));
 T = xe-xa;
 dt = T/100;
 x = xa:dt:xe;
-[~,~,S,C,~,F] = FT_GUI_Fourier_Trafo(funk,nft,x);
+[~,~,~,~,~,F] = FT_GUI_Fourier_Trafo(funk,nft,x);
 
 ymax = max(F(1,:,end));
+if ymax < 0 
+    yMax = 0;
+else
+    yMax = ymax+abs(fix(ymax*5)/10);
+end
 ymin = min(F(1,:,end));
-yMax = ymax+abs(fix(ymax*5)/10);
 if ymin > 0 
     yMin = 0;
 else
@@ -203,11 +207,17 @@ xmin = min(F(2,:,end));
 xMax = max(xmax,abs(xmin));
 O = -fix(xMax*15)/10;
 ax1 = handles.axes1;
+tmp = 0;
 while gstop == 0
     for n = 1:1:length(x)
-        plot(ax1,x(1,1:n),funk(x(1,1:n)),'Color','#77AC30')
+        if tmp == 0
+            N = n;
+        else
+            N = length(x);        
+        end
+        p_funk = plot(ax1,x(1,1:N),funk(x(1,1:N)),'Color','#77AC30');
         hold(ax1,'on')
-        plot(ax1,x(1,1:n),F(1,1:n,end),'k')
+        p_ft = plot(ax1,x(1,1:N),F(1,1:N,end),'k');
         plot(ax1,O+F(2,:,end),F(1,:,end),'k')
         for m = 1:1:nft
             plot(ax1,[O+F(2,n,m) O+F(2,n,m+1)],[F(1,n,m) F(1,n,m+1)],'Marker','.','MarkerSize',10,'Color','k')
@@ -215,12 +225,13 @@ while gstop == 0
         plot(ax1,[O+F(2,n,end) x(1,n)],[F(1,n,end) F(1,n,end)],'Marker','.','MarkerSize',10,'Color','k')
         ax1.XLim = ([2*O+xa xe]);
         ax1.YLim = ([yMin yMax]);
+        legend([p_funk p_ft],{'f(x)','Fourier-Trafo'},'location','NorthEast')
         ax1.XTick = (xa:xe);
         ax1.XAxisLocation = 'origin';
         ax1.YAxisLocation = 'origin';
         grid(ax1,'on')
         grid(ax1,'minor')
-        daspect([1 1 1])
+        ax1.DataAspectRatio = ([1 1 1]);
         drawnow
         hold(ax1,'off')
         while gpause ~= 0
@@ -230,28 +241,92 @@ while gstop == 0
             break
         end
     end
-%{
+    tmp = 1;
+end
+
+
+% --- Executes on button press in pb_draw2.
+function pb_draw2_Callback(hObject, eventdata, handles)
+% hObject    handle to pb_draw2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global gstop
+global gpause
+gstop = 0;
+gpause = 0;
+
+funk = str2func(['@(x)',get(handles.edit_funk,'string')]);
+xa = str2func(['@()',get(handles.edit_xa,'string')]);
+xa = xa();
+xe = str2func(['@()',get(handles.edit_xe,'string')]);
+xe = xe();
+nft = str2double(get(handles.edit_nft,'string'));
+
+T = xe-xa;
+dt = T/100;
+x = xa:dt:xe;
+[~,~,S,C,CS,~] = FT_GUI_Fourier_Trafo(funk,nft,x);
+
+ymaxs = max(S(1,:,:),[],'all');
+ymaxc = max(C(1,:,:),[],'all');
+ymax = max(max(ymaxs,ymaxc),max(CS(end,:)));
+if ymax < 0 
+    yMax = 0;
+else
+    yMax = ymax+abs(fix(ymax*5)/10);
+end
+
+ymins = min(S(1,:,:),[],'all');
+yminc = min(C(1,:,:),[],'all');
+ymin = min(min(ymins,yminc),min(CS(end,:)));
+if ymin > 0 
+    yMin = 0;
+else
+    yMin = ymin-abs(fix(ymin*5)/10);
+end
+y = yMax/100;
+
 ax2 = handles.axes2;
-for n = 1:1:nft
-    for t = 10:-1:0
-        plot(ax2,x,S(1,:,n)+t)
-        hold(ax2,'on')
-        plot(ax2,x,C(1,:,n)+t)
-        ax2.XLim = ([xa xe]);
-        ax2.YLim = ([yMin yMax]);
-        ax2.XAxisLocation = 'origin';
-        ax2.YAxisLocation = 'origin';
-        grid(ax2,'on')
-        grid(ax2,'minor')
-        daspect([1 1 1])
-        drawnow
-        hold(ax2,'off')
+while gstop == 0
+    for n = 1:1:2*nft+1
+        for t = 100:-1:0
+            p_funk = plot(ax2,x,funk(x),'Color','#77AC30');
+            hold(ax2,'on')
+            p_ft = plot(ax2,x,CS(n,:),'LineWidth',1.5,'Color','k');
+            p_c = plot(ax2,0,0,'Color','#0072BD');
+            p_s = plot(ax2,0,0,'Color','#D95319');
+            if t == 0
+                LW = 2;
+            else
+                LW = 1;
+            end
+            if mod(n,2) == 1 && n < 2*nft+1
+                plot(ax2,x,C(1,:,n/2+1/2)+t*y,'LineWidth',LW,'Color','#0072BD')
+            elseif mod(n,2) == 0 && n < 2*nft+1
+                plot(ax2,x,S(1,:,n/2)+t*y,'LineWidth',LW,'Color','#D95319')
+            end
+            ax2.XLim = ([xa xe]);
+            ax2.YLim = ([yMin yMax]);
+            legend([p_funk p_ft p_c p_s],{'f(x)','\SigmaFourier-Trafo','a*cos','b*sin'},'location','NorthEast')
+            ax2.XAxisLocation = 'origin';
+            ax2.YAxisLocation = 'origin';
+            grid(ax2,'on')
+            grid(ax2,'minor')
+            ax2.DataAspectRatio = ([1 1 1]);
+            drawnow
+            if t == 0
+                pause(2)
+            end
+            hold(ax2,'off')
+            while gpause ~= 0
+                uiwait
+            end
+            if gstop ~= 0
+                break
+            end
+        end
     end
 end
-%}
-end
-
-
 
 
 % --- Executes on button press in pb_pause.
