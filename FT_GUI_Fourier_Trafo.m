@@ -11,6 +11,7 @@ F = zeros(2,length(x),nft+1);               % 1. Zeile = 0 fuer Plot
 CS = zeros(1,length(x));
 s = @(x,k) sin((k-1)*x);
 c = @(x,k) cos((k-1)*x);
+n = 2;
 for k = 1:1:nft
     a(1,k) = 2/T*FT_GUI_Integral_Trapez(x(1),x(end),length(x),@(x,k) funk(x)*c(x,k),k);
     if abs(a(1,k)) < 10^-12
@@ -31,7 +32,10 @@ for k = 1:1:nft
     C(2,:,k) = a_0*a(1,k)*-s(x,k);              % x-Kompontente (Groesse)
     S(1,:,k) = b(1,k)*s(x,k);                   % y-Kompontente (Groesse)
     S(2,:,k) = b(1,k)*c(x,k);                   % x-Kompontente (Groesse)
-    CS(k,:) = C(1,:,k)+S(1,:,k);                % y-Werte/nft
+    CS(n,:) = CS(n-1,:)+C(1,:,k);                         % y-Werte zummanaddiert nacheinander
+    n = n+1;
+    CS(n,:) = CS(n-1,:)+S(1,:,k);                         % y-Werte zummanaddiert nacheinander
+    n = n+1;
     F(1,:,k+1) = F(1,:,k)+C(1,:,k)+S(1,:,k);    % y-Werte/nft summiert
     F(2,:,k+1) = F(2,:,k)+C(2,:,k)+S(2,:,k);    % x-Werte/nft summiert
 end
