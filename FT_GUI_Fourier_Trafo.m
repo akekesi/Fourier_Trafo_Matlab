@@ -13,12 +13,12 @@ s = @(x,k) sin((k-1)*x);
 c = @(x,k) cos((k-1)*x);
 n = 2;
 for k = 1:1:nft
-    a(1,k) = 2/T*FT_GUI_Integral_Trapez(x(1),x(end),length(x),@(x,k) funk(x)*c(x,k),k);
+    a(1,k) = 2/T*FT_GUI_Integral_Trapez(x(1),x(end),length(x),@(x,k) funk(x).*c(x,k),k);
     if abs(a(1,k)) < 10^-12
         a(1,k) = 0;
     end
     
-    b(1,k) = 2/T*FT_GUI_Integral_Trapez(x(1),x(end),length(x),@(x,k) funk(x)*s(x,k),k);
+    b(1,k) = 2/T*FT_GUI_Integral_Trapez(x(1),x(end),length(x),@(x,k) funk(x).*s(x,k),k);
     if abs(b(1,k)) < 10^-12
         b(1,k) = 0;
     end
