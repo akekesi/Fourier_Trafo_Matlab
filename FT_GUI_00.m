@@ -22,7 +22,7 @@ function varargout = FT_GUI_00(varargin)
 
 % Edit the above text to modify the response to help FT_GUI_00
 
-% Last Modified by GUIDE v2.5 03-Jul-2020 01:41:45
+% Last Modified by GUIDE v2.5 05-Jul-2020 00:11:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,7 +78,6 @@ function varargout = FT_GUI_00_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-
 function edit_funk_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_funk (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -101,76 +100,55 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-function edit_xa_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_xa (see GCBO)
+% --- Executes on slider movement.
+function slider_ab_Callback(hObject, eventdata, handles)
+% hObject    handle to slider_ab (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit_xa as text
-%        str2double(get(hObject,'String')) returns contents of edit_xa as a double
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
 
 % --- Executes during object creation, after setting all properties.
-function edit_xa_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_xa (see GCBO)
+function slider_ab_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider_ab (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+% --- Executes on selection change in popup_nft.
+function popup_nft_Callback(hObject, eventdata, handles)
+% hObject    handle to popup_nft (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popup_nft contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popup_nft
+
+
+% --- Executes during object creation, after setting all properties.
+function popup_nft_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popup_nft (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+    
 
 
-function edit_xe_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_xe (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit_xe as text
-%        str2double(get(hObject,'String')) returns contents of edit_xe as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_xe_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_xe (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit_nft_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_nft (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit_nft as text
-%        str2double(get(hObject,'String')) returns contents of edit_nft as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_nft_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_nft (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in pb_draw1.
-function pb_draw1_Callback(hObject, eventdata, handles)
-% hObject    handle to pb_draw1 (see GCBO)
+% --- Executes on button press in pb_draw.
+function pb_draw_Callback(hObject, eventdata, handles)
+% hObject    handle to pb_draw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global gstop
@@ -178,25 +156,59 @@ global gpause
 gstop = 0;
 gpause = 0;
 
-funk = str2func(['@(x)',get(handles.edit_funk,'string')]);
-xa = str2func(['@()',get(handles.edit_xa,'string')]);
-xa = xa();
-xe = str2func(['@()',get(handles.edit_xe,'string')]);
-xe = xe();
-nft = str2double(get(handles.edit_nft,'string'));
+xa = 0;
+xe = 2*pi;
+nft = get(handles.popup_nft,'Value');
 
 T = xe-xa;
 dt = T/100;
 x = xa:dt:xe;
-[~,~,~,~,~,F] = FT_GUI_Fourier_Trafo(funk,nft,x);
 
-ymax = max(F(1,:,end));
+% Eingabe/Check
+try
+    funk = str2func(['@(x) (x-x)+',get(handles.edit_funk,'String')]);
+    funk(x);
+catch
+    answer = questdlg({'Incorrect Function!','','What would you do?',''}, ...
+        'Warning', ...
+        'Try again','Example','Help','Try again');
+    switch answer
+        case 'Try again'
+            pb_stop_Callback();
+            return
+        case 'Example'
+            funk0 = 'x.^(1/2)';
+            set(handles.edit_funk,'String',funk0)
+            funk = str2func(['@(x)',funk0]);
+        case 'Help'
+            msgbox('"Help" is not finished yet','Help','warn');
+            pb_stop_Callback();
+            return
+    end
+end
+if exist('answer') == 1 && isempty(answer)
+    pb_stop_Callback();
+    return
+end
+if ~isreal(funk(x))
+    msgbox('Complex function is not allowed!','Warning','warn');
+    pb_stop_Callback();
+    return
+end
+
+% Fourier-Trafo
+[a,b,~,~,~,F] = FT_GUI_Fourier_Trafo(funk,nft,x);
+[ab] = FT_GUI_AB_Text(a,b);
+disp(ab')
+
+% Hilfswerte fuer Plot
+ymax = max(max(F(1,:,end)),max(funk(x)));
 if ymax < 0 
     yMax = 0;
 else
     yMax = ymax+abs(fix(ymax*5)/10);
 end
-ymin = min(F(1,:,end));
+ymin = min(min(F(1,:,end)),min(funk(x)));
 if ymin > 0 
     yMin = 0;
 else
@@ -206,9 +218,14 @@ xmax = max(F(2,:,end));
 xmin = min(F(2,:,end));
 xMax = max(xmax,abs(xmin));
 O = -fix(xMax*15)/10;
+if O > -1
+    O =-1;
+end
 ax1 = handles.axes1;
-tmp = 0;
-while gstop == 0
+tmp = 0;    % Wiederholung nach 1. Periodenzeit
+
+% Plot
+while gstop == 0 && isempty(findobj(handles.figure1)) == 0
     for n = 1:1:length(x)
         if tmp == 0
             N = n;
@@ -222,7 +239,15 @@ while gstop == 0
         for m = 1:1:nft
             plot(ax1,[O+F(2,n,m) O+F(2,n,m+1)],[F(1,n,m) F(1,n,m+1)],'Marker','.','MarkerSize',10,'Color','k')
         end
+        if funk(x(1,n)) < F(1,n,end)
+            col = '#D95319';
+        else
+            col = '#0072BD';
+        end
+        plot(ax1,[x(n) x(n)],[funk(x(1,n)) F(1,n,end)],'Color',col)
+        plot(ax1,x(1,n),funk(x(1,n)),'Marker','.','MarkerSize',10,'Color','#77AC30');       
         plot(ax1,[O+F(2,n,end) x(1,n)],[F(1,n,end) F(1,n,end)],'Marker','.','MarkerSize',10,'Color','k')
+        
         ax1.XLim = ([2*O+xa xe]);
         ax1.YLim = ([yMin yMax]);
         legend([p_funk p_ft],{'f(x)','Fourier-Trafo'},'location','NorthEast')
@@ -233,99 +258,15 @@ while gstop == 0
         grid(ax1,'minor')
         ax1.DataAspectRatio = ([1 1 1]);
         drawnow
-        hold(ax1,'off')
         while gpause ~= 0
             uiwait
         end
         if gstop ~= 0
             break
         end
+        hold(ax1,'off')
     end
     tmp = 1;
-end
-
-
-% --- Executes on button press in pb_draw2.
-function pb_draw2_Callback(hObject, eventdata, handles)
-% hObject    handle to pb_draw2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global gstop
-global gpause
-gstop = 0;
-gpause = 0;
-
-funk = str2func(['@(x)',get(handles.edit_funk,'string')]);
-xa = str2func(['@()',get(handles.edit_xa,'string')]);
-xa = xa();
-xe = str2func(['@()',get(handles.edit_xe,'string')]);
-xe = xe();
-nft = str2double(get(handles.edit_nft,'string'));
-
-T = xe-xa;
-dt = T/100;
-x = xa:dt:xe;
-[~,~,S,C,CS,~] = FT_GUI_Fourier_Trafo(funk,nft,x);
-
-ymaxs = max(S(1,:,:),[],'all');
-ymaxc = max(C(1,:,:),[],'all');
-ymax = max(max(ymaxs,ymaxc),max(CS(end,:)));
-if ymax < 0 
-    yMax = 0;
-else
-    yMax = ymax+abs(fix(ymax*5)/10);
-end
-
-ymins = min(S(1,:,:),[],'all');
-yminc = min(C(1,:,:),[],'all');
-ymin = min(min(ymins,yminc),min(CS(end,:)));
-if ymin > 0 
-    yMin = 0;
-else
-    yMin = ymin-abs(fix(ymin*5)/10);
-end
-y = yMax/100;
-
-ax2 = handles.axes2;
-while gstop == 0
-    for n = 1:1:2*nft+1
-        for t = 100:-1:0
-            p_funk = plot(ax2,x,funk(x),'Color','#77AC30');
-            hold(ax2,'on')
-            p_ft = plot(ax2,x,CS(n,:),'LineWidth',1.5,'Color','k');
-            p_c = plot(ax2,0,0,'Color','#0072BD');
-            p_s = plot(ax2,0,0,'Color','#D95319');
-            if t == 0
-                LW = 2;
-            else
-                LW = 1;
-            end
-            if mod(n,2) == 1 && n < 2*nft+1
-                plot(ax2,x,C(1,:,n/2+1/2)+t*y,'LineWidth',LW,'Color','#0072BD')
-            elseif mod(n,2) == 0 && n < 2*nft+1
-                plot(ax2,x,S(1,:,n/2)+t*y,'LineWidth',LW,'Color','#D95319')
-            end
-            ax2.XLim = ([xa xe]);
-            ax2.YLim = ([yMin yMax]);
-            legend([p_funk p_ft p_c p_s],{'f(x)','\SigmaFourier-Trafo','a*cos','b*sin'},'location','NorthEast')
-            ax2.XAxisLocation = 'origin';
-            ax2.YAxisLocation = 'origin';
-            grid(ax2,'on')
-            grid(ax2,'minor')
-            ax2.DataAspectRatio = ([1 1 1]);
-            drawnow
-            if t == 0
-                pause(2)
-            end
-            hold(ax2,'off')
-            while gpause ~= 0
-                uiwait
-            end
-            if gstop ~= 0
-                break
-            end
-        end
-    end
 end
 
 
@@ -348,6 +289,11 @@ function pb_stop_Callback(hObject, eventdata, handles)
 % hObject    handle to pb_stop (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global gpause
+if gpause == 1
+    uiresume
+    gpause = 0;
+end
 global gstop
 gstop = 1;
 
@@ -357,6 +303,7 @@ function pb_clear_Callback(hObject, eventdata, handles)
 % hObject    handle to pb_clear (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+pb_stop_Callback();
 cla(handles.axes1)
 
 
@@ -365,11 +312,23 @@ function pb_info_Callback(hObject, eventdata, handles)
 % hObject    handle to pb_info (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+web('https://en.wikipedia.org/wiki/Fourier_series')
 
 % --- Executes on button press in pb_close.
 function pb_close_Callback(hObject, eventdata, handles)
 % hObject    handle to pb_close (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+pb_stop_Callback();
 close
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+pb_stop_Callback();
+delete(hObject);
