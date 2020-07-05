@@ -4,6 +4,8 @@
 function [ab] = FT_GUI_AB_Text(a,b)
 a = string(round(a,2));
 b = string(round(b,2));
+a = ['a' a];
+b = ['b' b];
 N = length(a);
 Info = zeros(N+1,6);
 for n = 1:1:N
@@ -51,15 +53,20 @@ for n = 1:1:N
         b(n) = ' '+b(n);
     end
     b(n) = b(n)+' ';
-    c(n) = '|';
+    c(n) = ' |';
     for m = 1:1:Info(end,2)-Info(n,2)
         c(n) = ' '+c(n);
     end
-    c(n) = c(n)+'|';
+    c(n) = c(n)+'| ';
     d(n) = '';
     for m = 1:1:Info(end,5)-Info(n,5)
         d(n) = ' '+d(n);
     end
-    ab(n) = a(n)+c(n)+b(n)+d(n);
+    if n > 1
+        num = [' ',num2str(n-1),': '];
+    else
+        num = '    ';
+    end
+    ab(n) = num+a(n)+c(n)+b(n)+d(n);
 end
 end
