@@ -194,20 +194,26 @@ end
 disp(ab')
 
 % Hilfswerte fuer Plot
-ymax = max(max(F(1,:,end)),max(Funk));
+cmax = max(C,[],'all');
+cmin = min(C,[],'all');
+smax = max(S,[],'all');
+smin = min(S,[],'all');
+ymax = max(cmax,smax);
+ymin = min(cmin,smin);
+ymax = max(max(max(F(1,:,end)),max(Funk)),ymax);
 if ymax < 0 
     yMax = 0;
 else
     yMax = ymax+abs(fix(ymax*5)/10);
 end
-ymin = min(min(F(1,:,end)),min(Funk));
+ymin = min(min(min(F(1,:,end)),min(Funk)),ymin);
 if ymin > 0 
     yMin = 0;
 else
     yMin = ymin-abs(fix(ymin*5)/10);
 end
 
-N = 10;
+N = 25;
 y = yMax/N;
 
 ax1 = handles.axes1;
@@ -227,9 +233,25 @@ while gstop == 0 && isempty(findobj(handles.figure1)) == 0
                 LW = 1;
             end
             if mod(n,2) == 1 && n < 2*nft+1
+                if t == 0
+                    for m = 1:50:length(x)
+                        plot(ax1,[x(m) x(m)],[C(1,m,n/2+1/2) CS(n,m)],'Color','#0072BD')
+                    end
+                end
                 plot(ax1,x,C(1,:,n/2+1/2)+t*y,'LineWidth',LW,'Color','#0072BD')
             elseif mod(n,2) == 0 && n < 2*nft+1
+                if t == 0
+                    for m = 1:50:length(x)
+                        plot(ax1,[x(m) x(m)],[S(1,m,n/2) CS(n,m)],'Color','#D95319')
+                    end
+                end
                 plot(ax1,x,S(1,:,n/2)+t*y,'LineWidth',LW,'Color','#D95319')
+            end
+            if n == 2*nft+1
+                for k = 1:1:nft
+                    plot(ax1,x,C(1,:,k),'Color','#0072BD')
+                    plot(ax1,x,S(1,:,k),'Color','#D95319')
+                end
             end
             ax1.XLim = ([xa xe]);
             ax1.YLim = ([yMin yMax]);
@@ -239,13 +261,15 @@ while gstop == 0 && isempty(findobj(handles.figure1)) == 0
             ax1.YAxisLocation = 'origin';
             grid(ax1,'on')
             grid(ax1,'minor')
-            ax1.DataAspectRatio = ([1 1 1]);
             drawnow
             while gpause ~= 0
                 uiwait
             end
             if gstop ~= 0
                 break
+            end
+            if t == 0
+                pause(1)
             end
             hold(ax1,'off')
         end
