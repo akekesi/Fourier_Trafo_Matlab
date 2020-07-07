@@ -1,5 +1,5 @@
 # Fourier Transformation
-# Matlab - GUI
+# MATLAB - GUI
 
 ## GUI's
 
